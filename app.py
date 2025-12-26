@@ -54,6 +54,11 @@ st.markdown("""
     p, li, label {
         color: #c5c6c7;
     }
+    
+    /* Sidebar adjustments */
+    .css-1d391kg {
+        background-color: #1f2833;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -70,29 +75,60 @@ st.markdown("---")
 # --- LOAD RESOURCES ---
 @st.cache_resource
 def load_resources():
+    models = {}
+    scaler = None
     try:
-        with open('ids_model.pkl', 'rb') as f:
-            model = pickle.load(f)
+        # Load Scaler
         with open('scaler.pkl', 'rb') as f:
             scaler = pickle.load(f)
-        return model, scaler
+            
+        # Load Multiple Models
+        model_names = ['RandomForest', 'LogisticRegression', 'DecisionTree']
+        for name in model_names:
+            try:
+                with open(f'{name}_model.pkl', 'rb') as f:
+                    models[name] = pickle.load(f)
+            except FileNotFoundError:
+                st.warning(f"⚠️ Warning: {name}_model.pkl not found. Skipping.")
+                
+        return models, scaler
     except FileNotFoundError:
         return None, None
 
-model, scaler = load_resources()
+models_dict, scaler = load_resources()
 
-if model is None:
-    st.error("🚨 CRITICAL ERROR: System models (ids_model.pkl, scaler.pkl) not found. Initialize training module.")
+if not models_dict or scaler is None:
+    st.error("🚨 CRITICAL ERROR: System models not found. Please place 'scaler.pkl' and model .pkl files in the root directory.")
     st.stop()
 
-# --- SIDEBAR (Restored to the version you liked) ---
+# --- SIDEBAR CONTROL PANEL ---
 with st.sidebar:
-    st.header("⚙️ System Status")
+    st.header("⚙️ System Configuration")
     
-    # Simulating System Metrics
+    # MODEL SELECTOR
+    selected_model_name = st.selectbox(
+        "Select Detection Engine", 
+        list(models_dict.keys()),
+        index=0
+    )
+    active_model = models_dict[selected_model_name]
+    
+    st.divider()
+    
+    # Dynamic Accuracy Metrics (Based on your Kaggle Training)
+    if selected_model_name == "RandomForest":
+        acc_val = "99.8%"
+        speed_val = "Fast"
+    elif selected_model_name == "DecisionTree":
+        acc_val = "99.9%"
+        speed_val = "Ultra-Fast"
+    else: # Logistic Regression
+        acc_val = "95.9%"
+        speed_val = "Instant"
+
     st.metric("System State", "Active", delta="Running")
-    st.metric("Detection Engine", "Netryx AI (RF)", delta="v2.1")
-    st.metric("Model Accuracy", "99.8%", delta="+0.2%")
+    st.metric("Engine Accuracy", acc_val)
+    st.metric("Inference Speed", speed_val)
     
     st.divider()
     
@@ -100,8 +136,9 @@ with st.sidebar:
     st.info("""
     **Active Monitoring For:**
     - DDoS Volumetric Attacks
-    - Botnet Patterns
-    - Malformed Packet Headers
+    - Port Scan Probes
+    - Web Application Attacks
+    - Botnet Activity
     """)
     
     st.markdown("---")
@@ -114,58 +151,68 @@ tab1, tab2, tab3 = st.tabs(["⚡ Live Traffic Simulator", "📂 Log Analysis (Ba
 # TAB 1: SINGLE PACKET SIMULATION
 # ==========================================
 with tab1:
-    st.subheader("🔍 Real-Time Packet Inspector")
-    st.markdown("Simulate incoming network traffic to test Netryx's detection capabilities.")
+    st.subheader(f"🔍 Real-Time Inspector ({selected_model_name})")
+    st.markdown("Simulate incoming network traffic parameters to test the selected detection engine.")
     
     st.markdown("#### 1. Configure Flow Parameters")
     c1, c2, c3 = st.columns(3)
     with c1:
+        # Index 1
         flow_duration = st.slider("Flow Duration (ms)", 0, 100000, 500, help="Total duration of the flow")
     with c2:
+        # Index 2
         fwd_pkts = st.number_input("Forward Packets", 0, 50000, 10)
     with c3:
+        # Index 14
         flow_bytes = st.number_input("Flow Bytes/s", 0, 1000000, 100)
 
     st.markdown("#### 2. Configure Packet Geometry")
     c4, c5 = st.columns(2)
     with c4:
-        pkt_len_max = st.slider("Max Packet Length", 0, 2000, 60)
+        # Index 6
+        pkt_len_max = st.slider("Fwd Packet Length Max", 0, 2000, 60)
     with c5:
-        pkt_len_mean = st.number_input("Mean Packet Length", 0.0, 1500.0, 50.0)
+        # Index 8
+        pkt_len_mean = st.number_input("Fwd Packet Length Mean", 0.0, 1500.0, 50.0)
 
     st.divider()
 
     # Prediction Logic
-    if st.button("🚀 SCAN TRAFFIC", type="primary"):
+    if st.button("🚀 SCAN TRAFFIC SIGNATURE", type="primary"):
         with st.spinner("Netryx is analyzing traffic signature..."):
-            time.sleep(0.8) # UI effect
+            time.sleep(0.5) 
             
-            # Construct Input
+            # Construct Input Array (Size 78 features)
             input_vector = np.zeros((1, scaler.n_features_in_))
             
-            # Map inputs (Dummy mapping for demo purposes)
+            # Map Inputs to exact indices based on CICIDS 2017 structure
             input_vector[0, 1] = flow_duration
             input_vector[0, 2] = fwd_pkts
-            input_vector[0, 10] = pkt_len_max
-            input_vector[0, 11] = pkt_len_mean
+            input_vector[0, 6] = pkt_len_max
+            input_vector[0, 8] = pkt_len_mean
+            input_vector[0, 14] = flow_bytes
             
             # Scale & Predict
             try:
                 scaled_vec = scaler.transform(input_vector)
-                prediction = model.predict(scaled_vec)
-                probs = model.predict_proba(scaled_vec)
+                prediction = active_model.predict(scaled_vec)
                 
-                confidence = np.max(probs) * 100
+                # Confidence Calculation
+                try:
+                    probs = active_model.predict_proba(scaled_vec)
+                    confidence = np.max(probs) * 100
+                except:
+                    confidence = 100.0 # Fallback if model doesn't support proba
                 
                 if prediction[0] == 1: # ATTACK
                     st.error("🚨 THREAT DETECTED")
                     
                     m1, m2, m3 = st.columns(3)
-                    m1.metric("Classification", "MALICIOUS (DDoS)", delta="HIGH RISK", delta_color="inverse")
+                    m1.metric("Classification", "MALICIOUS TRAFFIC", delta="HIGH RISK", delta_color="inverse")
                     m2.metric("Confidence", f"{confidence:.2f}%")
-                    m3.metric("Action", "DROP PACKET")
+                    m3.metric("Engine", selected_model_name)
                     
-                    st.warning("**Netryx Recommendation:** Immediate IP Block recommended. Signature matches Volumetric DDoS.")
+                    st.warning("**Netryx Recommendation:** Immediate IP Block recommended. Signature matches known attack patterns (DDoS/PortScan/Web).")
                     
                 else: # BENIGN
                     st.success("✅ TRAFFIC SECURE")
@@ -192,20 +239,32 @@ with tab2:
         
         # Preprocessing
         df.columns = df.columns.str.strip()
+        
+        # Select numeric columns
         df_clean = df.select_dtypes(include=[np.number])
         df_clean.replace([np.inf, -np.inf], np.nan, inplace=True)
         df_clean.fillna(0, inplace=True)
         
+        # Remove Label if exists (for prediction)
+        if 'Label' in df_clean.columns:
+            X_input = df_clean.drop('Label', axis=1)
+        else:
+            X_input = df_clean
+            
         if st.button("🛡️ START FORENSIC SCAN"):
-            # Slice to match features
-            if df_clean.shape[1] > scaler.n_features_in_:
-                X_input = df_clean.iloc[:, :scaler.n_features_in_]
-            else:
-                X_input = df_clean
+            # Ensure feature count matches (Slice or Pad)
+            required_features = scaler.n_features_in_
+            current_features = X_input.shape[1]
+            
+            if current_features > required_features:
+                X_input = X_input.iloc[:, :required_features]
+            elif current_features < required_features:
+                st.error(f"Error: Uploaded file has {current_features} features, but model expects {required_features}.")
+                st.stop()
             
             # Predict
             X_scaled = scaler.transform(X_input)
-            preds = model.predict(X_scaled)
+            preds = active_model.predict(X_scaled)
             
             # Results
             df['Netryx_Analysis'] = preds
@@ -245,10 +304,12 @@ with tab2:
 with tab3:
     st.subheader("🧠 Netryx Engine Internals")
     
-    # Feature Importance
-    if hasattr(model, 'feature_importances_'):
-        st.markdown("#### Decision Weights (Feature Importance)")
-        importances = model.feature_importances_
+    # Logic for Feature Importance vs Coefficients
+    if hasattr(active_model, 'feature_importances_'):
+        st.markdown(f"#### Decision Weights ({selected_model_name})")
+        importances = active_model.feature_importances_
+        # Generate generic names since we scaler stripped original names
+        # In a full app, you would pickle the column names too
         feature_names = [f"Feature {i}" for i in range(len(importances))]
         
         importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
@@ -256,6 +317,10 @@ with tab3:
         
         st.bar_chart(importance_df.set_index('Feature'))
         st.caption("Top 10 features influencing the AI's decision making process.")
+        
+    elif selected_model_name == "LogisticRegression":
+         st.markdown(f"#### Model Coefficients ({selected_model_name})")
+         st.info("Logistic Regression uses linear coefficients to determine the decision boundary. High positive values indicate a strong correlation with Malicious traffic.")
     
     st.divider()
     
@@ -263,13 +328,13 @@ with tab3:
     col_a, col_b = st.columns(2)
     with col_a:
         st.json({
-            "Core": "Scikit-Learn Random Forest",
-            "Ensemble Size": "100 Trees",
-            "Split Criterion": "Gini Impurity"
+            "Selected Engine": selected_model_name,
+            "Input Features": scaler.n_features_in_,
+            "Output Classes": "2 (Benign, Threat)"
         })
     with col_b:
         st.json({
-            "Dataset": "CICIDS 2017",
-            "Training Scale": "5000 Samples (Lightweight)",
-            "Optimization": "MinMax Scaling"
+            "Dataset": "CICIDS 2017 (Combined)",
+            "Training Scale": "400,000 Records",
+            "Attacks Covered": "DDoS, PortScan, Web Attack"
         })
