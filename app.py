@@ -7,9 +7,8 @@ import base64
 from datetime import datetime
 import altair as alt # For advanced charts
 
-# --- HELPER: LOAD IMAGE AS BASE64 (For HTML Styling) ---
+# --- HELPER: LOAD IMAGE AS BASE64 ---
 def get_img_as_base64(file_path):
-    """Reads a local image and converts it to base64 for HTML embedding"""
     try:
         with open(file_path, "rb") as f:
             data = f.read()
@@ -20,7 +19,7 @@ def get_img_as_base64(file_path):
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="Netryx | Intelligent IDS",
-    page_icon="favicon.png", # Uses your local favicon
+    page_icon="favicon.png", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -28,7 +27,7 @@ st.set_page_config(
 # --- CONSTANTS & CONFIG ---
 BENIGN_LABEL = 0
 THREAT_LABEL = 1
-MODEL_VERSION = "v4.2.0-UI_Fix"
+MODEL_VERSION = "v4.3.0-Perfect_UI"
 BUILD_DATE = "2025-12-26"
 
 CONSTRAINTS = {
@@ -164,17 +163,16 @@ with st.sidebar:
     st.divider()
     st.caption("©haseebaliasghar | Netryx Labs")
 
-# --- HEADER SECTION (HTML/FLEXBOX LAYOUT) ---
-# This ensures perfect vertical alignment and tight spacing
+# --- HEADER SECTION (PERFECTLY ALIGNED) ---
 logo_base64 = get_img_as_base64("logo.png")
-logo_html = f'<img src="data:image/png;base64,{logo_base64}" width="120" style="margin-right: 25px;">' if logo_base64 else ""
+logo_html = f'<img src="data:image/png;base64,{logo_base64}" width="160" style="margin-right: 30px;">' if logo_base64 else ""
 
 st.markdown(f"""
     <div style="display: flex; align-items: center; margin-bottom: 20px;">
         {logo_html}
-        <div>
-            <h1 style="color: #66fcf1; margin: 0; padding: 0; line-height: 1.2;">NETRYX</h1>
-            <h3 style="color: #c5c6c7; margin: 0; padding: 0; font-weight: normal; font-size: 20px;">
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+            <h1 style="color: #66fcf1; margin: 0; padding: 0; font-size: 75px; line-height: 1.0; letter-spacing: 2px;">NETRYX</h1>
+            <h3 style="color: #c5c6c7; margin: 5px 0 0 0; padding: 0; font-weight: normal; font-size: 24px;">
                 Intelligent Network Intrusion Detection System
             </h3>
         </div>
