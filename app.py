@@ -54,13 +54,32 @@ st.markdown("""
     p, li, label {
         color: #c5c6c7;
     }
-    
-    /* Sidebar adjustments */
-    .css-1d391kg {
-        background-color: #1f2833;
-    }
     </style>
     """, unsafe_allow_html=True)
+
+# --- GLOBAL CONSTANTS: FEATURE NAMES ---
+# This list matches the exact order of columns in the CICIDS-2017 dataset
+FEATURE_COLS = [
+    'Destination Port', 'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets', 
+    'Total Length of Fwd Packets', 'Total Length of Bwd Packets', 'Fwd Packet Length Max', 
+    'Fwd Packet Length Min', 'Fwd Packet Length Mean', 'Fwd Packet Length Std', 
+    'Bwd Packet Length Max', 'Bwd Packet Length Min', 'Bwd Packet Length Mean', 
+    'Bwd Packet Length Std', 'Flow Bytes/s', 'Flow Packets/s', 'Flow IAT Mean', 
+    'Flow IAT Std', 'Flow IAT Max', 'Flow IAT Min', 'Fwd IAT Total', 'Fwd IAT Mean', 
+    'Fwd IAT Std', 'Fwd IAT Max', 'Fwd IAT Min', 'Bwd IAT Total', 'Bwd IAT Mean', 
+    'Bwd IAT Std', 'Bwd IAT Max', 'Bwd IAT Min', 'Fwd PSH Flags', 'Bwd PSH Flags', 
+    'Fwd URG Flags', 'Bwd URG Flags', 'Fwd Header Length', 'Bwd Header Length', 
+    'Fwd Packets/s', 'Bwd Packets/s', 'Min Packet Length', 'Max Packet Length', 
+    'Packet Length Mean', 'Packet Length Std', 'Packet Length Variance', 'FIN Flag Count', 
+    'SYN Flag Count', 'RST Flag Count', 'PSH Flag Count', 'ACK Flag Count', 'URG Flag Count', 
+    'CWE Flag Count', 'ECE Flag Count', 'Down/Up Ratio', 'Average Packet Size', 
+    'Avg Fwd Segment Size', 'Avg Bwd Segment Size', 'Fwd Header Length.1', 
+    'Fwd Avg Bytes/Bulk', 'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate', 'Bwd Avg Bytes/Bulk', 
+    'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate', 'Subflow Fwd Packets', 'Subflow Fwd Bytes', 
+    'Subflow Bwd Packets', 'Subflow Bwd Bytes', 'Init_Win_bytes_forward', 
+    'Init_Win_bytes_backward', 'act_data_pkt_fwd', 'min_seg_size_forward', 'Active Mean', 
+    'Active Std', 'Active Max', 'Active Min', 'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min'
+]
 
 # --- HEADER SECTION ---
 col1, col2 = st.columns([1, 6])
@@ -89,7 +108,7 @@ def load_resources():
                 with open(f'{name}_model.pkl', 'rb') as f:
                     models[name] = pickle.load(f)
             except FileNotFoundError:
-                st.warning(f"⚠️ Warning: {name}_model.pkl not found. Skipping.")
+                st.warning(f"⚠️ Warning: {name}_model.pkl not found.")
                 
         return models, scaler
     except FileNotFoundError:
@@ -98,24 +117,25 @@ def load_resources():
 models_dict, scaler = load_resources()
 
 if not models_dict or scaler is None:
-    st.error("🚨 CRITICAL ERROR: System models not found. Please place 'scaler.pkl' and model .pkl files in the root directory.")
+    st.error("🚨 CRITICAL ERROR: System models not found. Please place 'scaler.pkl' and model files in the directory.")
     st.stop()
 
 # --- SIDEBAR CONTROL PANEL ---
 with st.sidebar:
     st.header("⚙️ System Configuration")
     
-    # MODEL SELECTOR
+    # 1. MODEL SELECTOR (Fixed)
     selected_model_name = st.selectbox(
         "Select Detection Engine", 
         list(models_dict.keys()),
-        index=0
+        index=0,
+        help="Choose the ML algorithm to perform the analysis."
     )
     active_model = models_dict[selected_model_name]
     
     st.divider()
     
-    # Dynamic Accuracy Metrics (Based on your Kaggle Training)
+    # 2. Dynamic Accuracy Display
     if selected_model_name == "RandomForest":
         acc_val = "99.8%"
         speed_val = "Fast"
@@ -141,7 +161,6 @@ with st.sidebar:
     - Botnet Activity
     """)
     
-    st.markdown("---")
     st.caption("© 2025 Netryx Security Labs")
 
 # --- MAIN NAVIGATION ---
@@ -157,22 +176,22 @@ with tab1:
     st.markdown("#### 1. Configure Flow Parameters")
     c1, c2, c3 = st.columns(3)
     with c1:
-        # Index 1
+        # Index 1: Flow Duration
         flow_duration = st.slider("Flow Duration (ms)", 0, 100000, 500, help="Total duration of the flow")
     with c2:
-        # Index 2
+        # Index 2: Total Fwd Packets
         fwd_pkts = st.number_input("Forward Packets", 0, 50000, 10)
     with c3:
-        # Index 14
+        # Index 14: Flow Bytes/s
         flow_bytes = st.number_input("Flow Bytes/s", 0, 1000000, 100)
 
     st.markdown("#### 2. Configure Packet Geometry")
     c4, c5 = st.columns(2)
     with c4:
-        # Index 6
+        # Index 6: Fwd Packet Length Max
         pkt_len_max = st.slider("Fwd Packet Length Max", 0, 2000, 60)
     with c5:
-        # Index 8
+        # Index 8: Fwd Packet Length Mean
         pkt_len_mean = st.number_input("Fwd Packet Length Mean", 0.0, 1500.0, 50.0)
 
     st.divider()
@@ -185,7 +204,7 @@ with tab1:
             # Construct Input Array (Size 78 features)
             input_vector = np.zeros((1, scaler.n_features_in_))
             
-            # Map Inputs to exact indices based on CICIDS 2017 structure
+            # Map Inputs to exact indices
             input_vector[0, 1] = flow_duration
             input_vector[0, 2] = fwd_pkts
             input_vector[0, 6] = pkt_len_max
@@ -197,12 +216,11 @@ with tab1:
                 scaled_vec = scaler.transform(input_vector)
                 prediction = active_model.predict(scaled_vec)
                 
-                # Confidence Calculation
                 try:
                     probs = active_model.predict_proba(scaled_vec)
                     confidence = np.max(probs) * 100
                 except:
-                    confidence = 100.0 # Fallback if model doesn't support proba
+                    confidence = 100.0 
                 
                 if prediction[0] == 1: # ATTACK
                     st.error("🚨 THREAT DETECTED")
@@ -212,7 +230,7 @@ with tab1:
                     m2.metric("Confidence", f"{confidence:.2f}%")
                     m3.metric("Engine", selected_model_name)
                     
-                    st.warning("**Netryx Recommendation:** Immediate IP Block recommended. Signature matches known attack patterns (DDoS/PortScan/Web).")
+                    st.warning("**Netryx Recommendation:** Immediate IP Block recommended. Signature matches known attack patterns.")
                     
                 else: # BENIGN
                     st.success("✅ TRAFFIC SECURE")
@@ -236,16 +254,12 @@ with tab2:
     
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
-        
-        # Preprocessing
         df.columns = df.columns.str.strip()
         
-        # Select numeric columns
         df_clean = df.select_dtypes(include=[np.number])
         df_clean.replace([np.inf, -np.inf], np.nan, inplace=True)
         df_clean.fillna(0, inplace=True)
         
-        # Remove Label if exists (for prediction)
         if 'Label' in df_clean.columns:
             X_input = df_clean.drop('Label', axis=1)
         else:
@@ -272,7 +286,6 @@ with tab2:
             
             # Dashboard
             st.markdown("### Scan Results")
-            
             kpi1, kpi2, kpi3 = st.columns(3)
             total = len(df)
             threats = np.sum(preds == 1)
@@ -304,19 +317,30 @@ with tab2:
 with tab3:
     st.subheader("🧠 Netryx Engine Internals")
     
-    # Logic for Feature Importance vs Coefficients
+    # Feature Importance (Fixed to show Real Names)
     if hasattr(active_model, 'feature_importances_'):
         st.markdown(f"#### Decision Weights ({selected_model_name})")
-        importances = active_model.feature_importances_
-        # Generate generic names since we scaler stripped original names
-        # In a full app, you would pickle the column names too
-        feature_names = [f"Feature {i}" for i in range(len(importances))]
         
-        importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+        importances = active_model.feature_importances_
+        
+        # Create DataFrame with REAL feature names
+        # Note: We check lengths just in case, to avoid mismatch errors
+        if len(importances) == len(FEATURE_COLS):
+            importance_df = pd.DataFrame({
+                'Feature': FEATURE_COLS, 
+                'Importance': importances
+            })
+        else:
+            # Fallback if lengths differ (shouldn't happen if setup is correct)
+            importance_df = pd.DataFrame({
+                'Feature': [f"Feat {i}" for i in range(len(importances))], 
+                'Importance': importances
+            })
+            
         importance_df = importance_df.sort_values(by='Importance', ascending=False).head(10)
         
         st.bar_chart(importance_df.set_index('Feature'))
-        st.caption("Top 10 features influencing the AI's decision making process.")
+        st.caption("Top 10 network features influencing the AI's decision making process.")
         
     elif selected_model_name == "LogisticRegression":
          st.markdown(f"#### Model Coefficients ({selected_model_name})")
