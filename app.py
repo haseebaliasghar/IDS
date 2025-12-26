@@ -17,7 +17,7 @@ st.set_page_config(
 # --- CONSTANTS & CONFIG ---
 BENIGN_LABEL = 0
 THREAT_LABEL = 1
-MODEL_VERSION = "v4.1.0-Ultimate"
+MODEL_VERSION = "v4.1.1-Ultimate"
 BUILD_DATE = "2025-12-26"
 
 # Validation Constraints (To prevent crashes)
@@ -171,29 +171,29 @@ with st.sidebar:
     st.divider()
     st.caption("©haseebaliasghar | Netryx Labs")
 
-# --- HEADER SECTION (CENTERED LAYOUT) ---
+# --- HEADER SECTION (SIDE-BY-SIDE FIXED) ---
 st.markdown("<br>", unsafe_allow_html=True) # Spacer
 
-col_center = st.columns([1, 6, 1]) 
-with col_center[1]:
-    # 1. THE LOGO (Centered)
-    c_img_1, c_img_2, c_img_3 = st.columns([1, 1, 1])
-    with c_img_2:
-        try:
-            st.image("logo.png", width=180) # USES YOUR UPLOADED LOGO
-        except Exception:
-            # Fallback if file missing
-            st.warning("⚠️ logo.png not found")
+# Ratio 1:7 ensures the text is close to the logo, not floating far away
+col1, col2 = st.columns([1, 7]) 
 
-    # 2. THE TITLE (Centered Text)
+with col1:
+    try:
+        # Increased width slightly for impact
+        st.image("logo.png", width=140) 
+    except Exception:
+        st.warning("⚠️ logo.png not found")
+
+with col2:
+    # We use padding-top to align the text vertically with the center of the logo
     st.markdown("""
-        <h1 style='text-align: center; color: #66fcf1; margin-bottom: -10px;'>
-            NETRYX
-        </h1>
-        <h3 style='text-align: center; color: #c5c6c7; font-weight: normal; font-size: 20px;'>
-            Intelligent Network Intrusion Detection System
-        </h3>
-        <hr style='border-color: #45a29e; margin-top: 25px; margin-bottom: 35px;'>
+        <div style="padding-top: 10px; text-align: left;">
+            <h1 style='color: #66fcf1; margin-bottom: -10px; margin-top: 0px;'>NETRYX</h1>
+            <h3 style='color: #c5c6c7; font-weight: normal; font-size: 20px; margin-top: 5px;'>
+                Intelligent Network Intrusion Detection System
+            </h3>
+        </div>
+        <hr style='border-color: #45a29e; margin-top: 20px; margin-bottom: 20px;'>
     """, unsafe_allow_html=True)
 
 # --- MAIN TABS ---
@@ -303,82 +303,3 @@ with tab2:
             
             for i, chunk in enumerate(chunks):
                 chunk.columns = chunk.columns.str.strip()
-                clean = chunk.select_dtypes(include=[np.number]).fillna(0)
-                if 'Label' in clean.columns: clean = clean.drop('Label', axis=1)
-                
-                if clean.shape[1] > scaler.n_features_in_:
-                    clean = clean.iloc[:, :scaler.n_features_in_]
-                elif clean.shape[1] < scaler.n_features_in_:
-                    missing = scaler.n_features_in_ - clean.shape[1]
-                    clean = pd.concat([clean, pd.DataFrame(np.zeros((clean.shape[0], missing)))], axis=1)
-                
-                preds = models_dict["RandomForest"].predict(scaler.transform(clean))
-                chunk['Netryx_Analysis'] = preds
-                results.append(chunk)
-                if i < 90: bar.progress(i + 10)
-            
-            bar.progress(100)
-            final_df = pd.concat(results)
-            final_df['Status'] = final_df['Netryx_Analysis'].apply(lambda x: "⚠️ THREAT" if x == 1 else "✅ SAFE")
-            
-            k1, k2, k3 = st.columns(3)
-            threats = np.sum(final_df['Netryx_Analysis'] == 1)
-            k1.metric("Total Flows", len(final_df))
-            k2.metric("Threats", threats, delta_color="inverse")
-            k3.metric("Safe", len(final_df)-threats)
-            
-            st.caption("Recent Threat Logs")
-            st.dataframe(final_df[final_df['Netryx_Analysis'] == 1].head())
-            
-            csv = final_df.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Download Full Report", csv, "netryx_report.csv", "text/csv")
-            
-        except Exception as e:
-            st.error(f"Error: {e}")
-
-# ==========================================
-# TAB 3: ANALYTICS DASHBOARD
-# ==========================================
-with tab3:
-    st.subheader("📊 Session Analytics")
-    
-    if len(st.session_state.history) > 0:
-        df_hist = pd.DataFrame(st.session_state.history)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.caption("Threat Distribution")
-            status_counts = df_hist['Result'].value_counts().reset_index()
-            status_counts.columns = ['Result', 'Count']
-            chart = alt.Chart(status_counts).mark_arc(innerRadius=50).encode(
-                theta='Count',
-                color=alt.Color('Result', scale=alt.Scale(domain=['⚠️ THREAT', '✅ SAFE'], range=['#ff4b4b', '#00ff41'])),
-                tooltip=['Result', 'Count']
-            )
-            st.altair_chart(chart, use_container_width=True)
-            
-        with c2:
-            st.caption("Engine Activity")
-            st.bar_chart(df_hist['Model'].value_counts())
-            
-        st.markdown("### 📜 Activity Log")
-        st.dataframe(df_hist, use_container_width=True)
-    else:
-        st.info("No data yet. Run a scan in the Live Simulator tab to generate analytics.")
-
-# ==========================================
-# TAB 4: ENGINE INTERNALS
-# ==========================================
-with tab4:
-    st.subheader("🧠 Engine Logic")
-    model = models_dict.get("RandomForest")
-    if model and hasattr(model, 'feature_importances_'):
-        importances = model.feature_importances_
-        display_names = FEATURE_COLS if len(importances) == len(FEATURE_COLS) else [f"Feature {i}" for i in range(len(importances))]
-        df_imp = pd.DataFrame({'Feature': display_names, 'Importance': importances})
-        df_imp = df_imp.sort_values('Importance', ascending=False).head(10)
-        
-        st.bar_chart(df_imp.set_index('Feature'))
-        st.caption("Top 10 features driving the Random Forest decision tree.")
-    else:
-        st.info("Select a Tree-based model to view Feature Importance.")
