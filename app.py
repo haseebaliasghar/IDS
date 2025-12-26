@@ -161,10 +161,10 @@ with st.sidebar:
     
     st.divider()
     
-    # Metadata Display
-    col_m1, col_m2 = st.columns(2)
-    col_m1.metric("Version", MODEL_VERSION)
-    col_m2.metric("Build", "Stable")
+    # Metadata Display (FIXED LAYOUT)
+    # Stacked vertically to prevent text cutoff
+    st.metric("Version", MODEL_VERSION)
+    st.metric("Build", "Stable")
     
     if mode == "Single Engine":
         # Simulate accuracy display based on model type
