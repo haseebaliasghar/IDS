@@ -124,7 +124,7 @@ if not models_dict or scaler is None:
 with st.sidebar:
     st.header("⚙️ System Configuration")
     
-    # 1. MODEL SELECTOR (Fixed)
+    # 1. MODEL SELECTOR
     selected_model_name = st.selectbox(
         "Select Detection Engine", 
         list(models_dict.keys()),
@@ -161,7 +161,8 @@ with st.sidebar:
     - Botnet Activity
     """)
     
-    st.caption("© haseebaliasghar")
+    st.markdown("---")
+    st.caption("©haseebaliasghar")
 
 # --- MAIN NAVIGATION ---
 tab1, tab2, tab3 = st.tabs(["⚡ Live Traffic Simulator", "📂 Log Analysis (Batch)", "🧠 Netryx Intelligence"])
@@ -324,14 +325,12 @@ with tab3:
         importances = active_model.feature_importances_
         
         # Create DataFrame with REAL feature names
-        # Note: We check lengths just in case, to avoid mismatch errors
         if len(importances) == len(FEATURE_COLS):
             importance_df = pd.DataFrame({
                 'Feature': FEATURE_COLS, 
                 'Importance': importances
             })
         else:
-            # Fallback if lengths differ (shouldn't happen if setup is correct)
             importance_df = pd.DataFrame({
                 'Feature': [f"Feat {i}" for i in range(len(importances))], 
                 'Importance': importances
@@ -362,4 +361,3 @@ with tab3:
             "Training Scale": "400,000 Records",
             "Attacks Covered": "DDoS, PortScan, Web Attack"
         })
-
