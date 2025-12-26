@@ -27,7 +27,7 @@ st.set_page_config(
 # --- CONSTANTS & CONFIG ---
 BENIGN_LABEL = 0
 THREAT_LABEL = 1
-MODEL_VERSION = "v4.3.0-Perfect_UI"
+MODEL_VERSION = "v4.3.0"
 BUILD_DATE = "2025-12-26"
 
 CONSTRAINTS = {
@@ -346,3 +346,4 @@ with tab4:
         st.caption("Top 10 features driving the Random Forest decision tree.")
     else:
         st.info("Select a Tree-based model to view Feature Importance.")
+
