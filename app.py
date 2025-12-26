@@ -161,7 +161,7 @@ with st.sidebar:
     - Botnet Activity
     """)
     
-    st.caption("© 2025 Netryx Security Labs")
+    st.caption("© haseebaliasghar")
 
 # --- MAIN NAVIGATION ---
 tab1, tab2, tab3 = st.tabs(["⚡ Live Traffic Simulator", "📂 Log Analysis (Batch)", "🧠 Netryx Intelligence"])
@@ -362,3 +362,4 @@ with tab3:
             "Training Scale": "400,000 Records",
             "Attacks Covered": "DDoS, PortScan, Web Attack"
         })
+
