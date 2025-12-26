@@ -392,17 +392,5 @@ with tab4:
         st.bar_chart(df_imp.set_index('Feature'))
         st.caption("Top 10 features driving the Random Forest decision tree.")
         
-        # Add visual diagram triggers for presentation context
-        # The user has built an entire IDS, so understanding the flow is key.
-        st.markdown("---")
-        st.markdown("### 📚 System Architecture")
-        # 
-        
-        st.markdown("### 🌳 Random Forest Visualization")
-        # 
-
-[Image of random forest classifier diagram]
-
-        
     else:
         st.info("Select a Tree-based model to view Feature Importance.")
