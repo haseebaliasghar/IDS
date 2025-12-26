@@ -178,7 +178,7 @@ with st.sidebar:
 
 # --- HEADER SECTION ---
 c1, c2 = st.columns([1, 6])
-with c1: st.image("https://cdn-icons-png.flaticon.com/512/9131/9131546.png", width=90)
+with c1: st.image("https://cdn-icons-png.flaticon.com/512/2716/2716652.png", width=90)
 with c2: 
     st.title("NETRYX")
     st.markdown("### Intelligent Network Intrusion Detection System")
@@ -394,3 +394,4 @@ with tab4:
         
     else:
         st.info("Select a Tree-based model to view Feature Importance.")
+
