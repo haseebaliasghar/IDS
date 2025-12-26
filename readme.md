@@ -90,9 +90,21 @@ The application will launch in your browser at: `http://localhost:8501`
 ---
 
 ## 📸 Screenshots
-*(Add your screenshots here)*
-- The Dashboard (Real-Time Inspector)
-- Consensus Mode (Multi-Model Detection)
+<div align="center">
+  <!-- Screenshot 1: Dashboard -->
+  <img src="https://github.com/haseebaliasghar/IDS/blob/main/screenshots/dashboard.png" alt="Dashboard" width="800">
+  <p><em>Real-Time Traffic Inspector Dashboard</em></p>
+  <br>
+
+  <!-- Screenshot 2: Batch Scan -->
+  <img src="https://github.com/haseebaliasghar/IDS/blob/main/screenshots/batch_scan.png" alt="Batch Scan" width="800">
+  <p><em>Forensic Batch Scan Report</em></p>
+  <br>
+
+  <!-- Screenshot 3: Consensus -->
+  <img src="https://github.com/haseebaliasghar/IDS/blob/main/screenshots/Consensus_scan.png" alt="Consensus Mode" width="800">
+  <p><em>Multi-Model Consensus Mode</em></p>
+</div>
 
 ---
 
