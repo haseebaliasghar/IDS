@@ -60,12 +60,10 @@ st.markdown("""
 # --- HEADER SECTION ---
 col1, col2 = st.columns([1, 6])
 with col1:
-    # You can replace this URL with a custom logo later
-    st.image("https://cdn-icons-png.flaticon.com/512/2083/2083236.png", width=90)
+    st.image("https://cdn-icons-png.flaticon.com/512/9131/9131546.png", width=90)
 with col2:
     st.title("NETRYX")
     st.markdown("### Intelligent Network Intrusion Detection Using Machine Learning")
-    st.markdown("System Status: **ONLINE** | Model: **v2.1 Stable**")
 
 st.markdown("---")
 
@@ -87,26 +85,26 @@ if model is None:
     st.error("🚨 CRITICAL ERROR: System models (ids_model.pkl, scaler.pkl) not found. Initialize training module.")
     st.stop()
 
-# --- SIDEBAR DASHBOARD ---
+# --- SIDEBAR (Restored to the version you liked) ---
 with st.sidebar:
-    st.title("⚙️ Control Panel")
+    st.header("⚙️ System Status")
     
-    # System Metrics
-    st.markdown("**System Health**")
-    col_s1, col_s2 = st.columns(2)
-    col_s1.metric("Latency", "12ms", delta="-2ms")
-    col_s2.metric("CPU Load", "14%", delta="Normal")
+    # Simulating System Metrics
+    st.metric("System State", "Active", delta="Running")
+    st.metric("Detection Engine", "Netryx AI (RF)", delta="v2.1")
+    st.metric("Model Accuracy", "99.8%", delta="+0.2%")
     
     st.divider()
     
-    st.markdown("**Model Intelligence**")
+    st.subheader("🛡️ Threat Intelligence")
     st.info("""
-    **Active Engine:** Random Forest Classifier
-    **Training Accuracy:** 99.8%
-    **Threat Scope:** DDoS, PortScan, BruteForce
+    **Active Monitoring For:**
+    - DDoS Volumetric Attacks
+    - Botnet Patterns
+    - Malformed Packet Headers
     """)
     
-    st.divider()
+    st.markdown("---")
     st.caption("© 2025 Netryx Security Labs")
 
 # --- MAIN NAVIGATION ---
