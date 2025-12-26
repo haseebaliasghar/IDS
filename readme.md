@@ -68,5 +68,5 @@ Built with **Streamlit** and trained on the **CICIDS-2017** dataset, Netryx achi
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/netryx-ids.git](https://github.com/yourusername/netryx-ids.git)
+git clone [https://github.com/haseebaliasghar/netryx-ids.git](https://github.com/haseebaliasghar/netryx-ids.git)
 cd netryx-ids
